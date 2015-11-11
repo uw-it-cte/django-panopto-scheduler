@@ -1,3 +1,4 @@
+from django.template import Context, loader
 from scheduler.views.rest_dispatch import RESTDispatch
 from scheduler.utils.validation import Validation
 from scheduler.views.api.exceptions import MissingParamException, \
@@ -7,6 +8,7 @@ from panopto_client.remote_recorder import RemoteRecorderManagement
 from scheduler.models import RecorderCache, RecorderCacheEntry
 from scheduler.utils.recorder import get_api_recorder_details, \
     RecorderException
+from scheduler.utils.session import get_sessions_by_session_ids
 from restclients.r25.spaces import get_space_by_id
 from restclients.exceptions import DataFailureException
 import datetime
@@ -144,3 +146,41 @@ class Recorder(RESTDispatch):
         RecorderCacheEntry.objects.filter(cache=rec_cache).delete()
         rec_cache.delete()
         raise RecorderCache.DoesNotExist()
+
+class RecorderCrestron(Recorder):
+    def _recorder_rep(self, recorders):
+        response = super(RecorderCrestron, self)._recorder_rep(recorders)
+        reps = json.loads(response.content)
+
+        for rep in reps:
+            sessions = get_sessions_by_session_ids(rep['scheduled_recordings'])
+            for s in sessions:
+                if s.State in ('Recording', 'Broadcasting', 'Paused'):
+                    now = pytz.UTC.localize(datetime.datetime.now())
+                    start_utc = s.StartTime.astimezone(pytz.utc)
+                    end_utc = start_utc + datetime.timedelta(
+                        seconds=int(s.Duration))
+                    rep['session'] = {
+                        'name': s.Name,
+                        'state': s.State,
+                        'folder': s.FolderName,
+                        'is_broadcast': s.IsBroadcast,
+                        'start': start_utc.isoformat(),
+                        'end': end_utc.isoformat(),
+                        'min_to_start': (now - start_utc).seconds / 60,
+                        'min_to_end': (now - end_utc).seconds / 60,
+                    }
+                    if s.IsBroadcast:
+                        rep['session']['viewer_url'] = s.ViewerUrl
+                    description = s.Description if s.Description else ''
+                    m = re.search('^.cp(\d)$', description)
+                    if m:
+                        rep['session']['camera_preset'] = m.group(1)
+
+        template = loader.get_template("scheduler/api/recorder.xml")
+        context = Context({
+            "recorders": reps,
+        })
+        response.content = template.render(context)
+
+        return response

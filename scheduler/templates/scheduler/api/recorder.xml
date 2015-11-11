@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<recorders>{% for recorder in recorders %}
+    <recorder>
+        <recorder_id>{{recorder.id}}</recorder_id>
+        <recorder_external_id>recorder.external_id</recorder_external_id>
+        <recorder_name>{{recorder.name}}</recorder_name>
+        <recorder_state>{{recorder.state}}</recorder_state>{% if recorder.reservation %}
+        <reservation>
+            <reservation_state>{{recorder.reservation.state}}</reservation_state>
+            <reservation_start_dt>{{recorder.reservation.start_dt}}</reservation_start_dt>
+            <reservation_end_dt>{{recorder.reservation.end_dt}}</reservation_end_dt>
+            <reservation_event_name>{{recorder.reservation.event_name}}</reservation_event_name>
+            <reservation_event_state>{{recorder.reservation.event_state}}</reservation_event_state>
+            <reservation_min_to_start>{{recorder.reservation.min_to_start}}</reservation_min_to_start>
+            <reservation_min_to_end>{{recorder.reservation.min_to_end}}</reservation_min_to_end>
+        </reservation>{% endif %}{% if recorder.session %}
+        <session>
+            <session_name>{{recorder.session.name}}</session_name>
+            <session_state>{{recorder.session.state}}</session_state>
+            <session_folder>{{recorder.session.folder}}</session_folder>
+            <session_is_broadcast>{{recorder.session.is_broadcast}}</session_is_broadcast>
+            <session_start>{{recorder.session.start}}</session_start>
+            <session_end>{{recorder.session.end}}</session_end>
+            <session_min_to_start>{{recorder.session.min_to_start}}</session_min_to_start>
+            <session_min_to_end>{{recorder.session.min_to_end}}</session_min_to_end>{% if recorder.is_broadcast %}
+            <session_viewer_url>{{recorder.session.viewer_url}}</session_viewer_url>{% endif %}
+            <session_camera_preset>{{recorder.session.camera_preset}}</session_camera_preset>
+        </session>{% endif %}
+    </recorder>{% endfor %}
+</recorders>

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.conf.urls import patterns, include, url
 from django.views.generic import TemplateView
 from scheduler.views.api.schedule import Schedule
-from scheduler.views.api.recorder import Recorder
+from scheduler.views.api.recorder import Recorder, RecorderCrestron
 from scheduler.views.api.space import Space
 from scheduler.views.api.session import Session, SessionPublic, \
     SessionBroadcast, SessionRecordingTime
@@ -14,6 +14,8 @@ urlpatterns = patterns(
     url(r'^course/?$', 'scheduler.views.course.CourseSchedule'),
     url(r'^(blti/)?api/v1/recorder/(?P<recorder_id>[0-9a-f\-]+)?$',
         Recorder().run),
+    url(r'^(blti/)?api/v1/recorder/(?P<recorder_id>[0-9a-f\-]+)/crestron/?$',
+        RecorderCrestron().run),
     url(r'^(blti/)?api/v1/space/(?P<space_id>[0-9]+)?$', Space().run),
     url(r'^(blti/)?api/v1/session/(?P<session_id>[0-9a-f\-]+)/public/?$',
         SessionPublic().run),
